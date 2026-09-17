@@ -39,6 +39,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -120,3 +121,8 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": 60 * 60 * 24,
     },
 }
+
+
+# Arquivos estáticos em produção
+WHITENOISE_MAX_AGE = 31536000
+WHITENOISE_AUTOREFRESH = False
