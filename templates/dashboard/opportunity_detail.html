@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ item.repository.name }} | SaaS Hunter
+{% endblock %}
+
+{% block page_title %}
+Análise da oportunidade
+{% endblock %}
+
+{% block content %}
+
+<div class="heading-row">
+
+    <div>
+
+        <a
+            href="{% url 'dashboard:opportunities' %}"
+            class="section-link"
+        >
+            ← Voltar para oportunidades
+        </a>
+
+        <h1 style="margin-top:12px;">
+            {{ item.repository.full_name }}
+        </h1>
+
+        <div class="subtitle">
+            {{ item.market_segment }}
+        </div>
+
+    </div>
+
+    <div class="big-score">
+
+        {% if item.score %}
+            {{ item.score.final_score }}
+        {% else %}
+            -
+        {% endif %}
+
+        <span>/100</span>
+
+    </div>
+
+</div>
+
+
+<div class="detail-grid">
+
+    <div class="card detail-card">
+
+        <h3>Problema</h3>
+
+        <p>
+            {{ item.problem }}
+        </p>
+
+    </div>
+
+
+    <div class="card detail-card">
+
+        <h3>Solução sugerida</h3>
+
+        <p>
+            {{ item.solution }}
+        </p>
+
+    </div>
+
+
+    <div class="card detail-card">
+
+        <h3>Cliente-alvo</h3>
+
+        <p>
+            {{ item.target_customer }}
+        </p>
+
+    </div>
+
+
+    <div class="card detail-card">
+
+        <h3>Modelo comercial</h3>
+
+        <p>
+            {{ item.business_model }}
+        </p>
+
+        <strong>
+            {{ item.suggested_pricing }}
+        </strong>
+
+    </div>
+
+</div>
+
+
+{% if item.score %}
+
+<div class="section">
+
+    <div class="section-header">
+        <h2>Composição do score</h2>
+    </div>
+
+    <div class="score-grid">
+
+        <div class="card score-card">
+            <span>Problema de mercado</span>
+            <strong>{{ item.score.market_problem }}/20</strong>
+        </div>
+
+        <div class="card score-card">
+            <span>Monetização</span>
+            <strong>{{ item.score.monetization }}/20</strong>
+        </div>
+
+        <div class="card score-card">
+            <span>Recorrência</span>
+            <strong>{{ item.score.recurrence }}/15</strong>
+        </div>
+
+        <div class="card score-card">
+            <span>Crescimento</span>
+            <strong>{{ item.score.growth }}/10</strong>
+        </div>
+
+        <div class="card score-card">
+            <span>Maturidade técnica</span>
+            <strong>{{ item.score.technical_maturity }}/10</strong>
+        </div>
+
+        <div class="card score-card">
+            <span>Espaço competitivo</span>
+            <strong>{{ item.score.competition }}/10</strong>
+        </div>
+
+        <div class="card score-card">
+            <span>Facilidade comercial</span>
+            <strong>{{ item.score.commercial_ease }}/5</strong>
+        </div>
+
+        <div class="card score-card">
+            <span>Licença</span>
+            <strong>{{ item.score.license }}/5</strong>
+        </div>
+
+        <div class="card score-card">
+            <span>Diferenciação</span>
+            <strong>{{ item.score.differentiation }}/5</strong>
+        </div>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+
+<div class="section">
+
+    <div class="card detail-card">
+
+        <h3>Análise comercial inicial</h3>
+
+        <p>
+            {{ item.commercial_summary }}
+        </p>
+
+    </div>
+
+</div>
+
+
+{% if item.score %}
+
+<div class="section">
+
+    <div class="card detail-card">
+
+        <h3>Por que recebeu esse score?</h3>
+
+        <p>
+            {{ item.score.rationale }}
+        </p>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+
+<div class="section">
+
+    <div class="card detail-card">
+
+        <h3>Projeto no GitHub</h3>
+
+        <p>
+            ★ {{ item.repository.stars }}
+            &nbsp;&nbsp;
+            Forks: {{ item.repository.forks }}
+            &nbsp;&nbsp;
+            Issues: {{ item.repository.open_issues }}
+            &nbsp;&nbsp;
+            Licença: {{ item.repository.license_spdx|default:"Não identificada" }}
+        </p>
+
+        <a
+            href="{{ item.repository.url }}"
+            target="_blank"
+            class="button button-primary"
+        >
+            Abrir repositório
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

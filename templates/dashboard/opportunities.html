@@ -17,7 +17,8 @@ Oportunidades
         <h1>Oportunidades</h1>
 
         <div class="subtitle">
-            Projetos classificados para análise comercial.
+            Projetos classificados automaticamente
+            pelo motor comercial do SaaS Hunter.
         </div>
 
     </div>
@@ -25,7 +26,10 @@ Oportunidades
 </div>
 
 
-<form method="get" class="filters">
+<form
+    method="get"
+    class="filters"
+>
 
     <input
         class="form-control search"
@@ -89,8 +93,15 @@ Oportunidades
 
                 <tr>
 
-                    <td class="repo-name">
-                        {{ item.repository.full_name }}
+                    <td>
+
+                        <a
+                            href="{% url 'dashboard:opportunity_detail' item.pk %}"
+                            class="repo-name"
+                        >
+                            {{ item.repository.full_name }}
+                        </a>
+
                     </td>
 
                     <td>
@@ -157,7 +168,9 @@ Oportunidades
 
             {% if page_obj.has_previous %}
 
-            <a href="?page={{ page_obj.previous_page_number }}&q={{ q }}&status={{ status }}">
+            <a
+                href="?page={{ page_obj.previous_page_number }}&q={{ q }}&status={{ status }}"
+            >
                 ← Anterior
             </a>
 
@@ -167,7 +180,9 @@ Oportunidades
 
             &nbsp;&nbsp;
 
-            <a href="?page={{ page_obj.next_page_number }}&q={{ q }}&status={{ status }}">
+            <a
+                href="?page={{ page_obj.next_page_number }}&q={{ q }}&status={{ status }}"
+            >
                 Próxima →
             </a>
 

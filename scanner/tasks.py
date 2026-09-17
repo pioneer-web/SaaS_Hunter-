@@ -2,7 +2,13 @@ from celery import shared_task
 from django.db import transaction
 
 from repositories.models import Repository
-from .github import fetch_repository, search_repositories, upsert_repository
+
+from .github import (
+    fetch_repository,
+    search_repositories,
+    upsert_repository,
+)
+
 
 DEFAULT_QUERIES = [
     "topic:saas stars:>20 archived:false",
@@ -17,29 +23,70 @@ DEFAULT_QUERIES = [
 ]
 
 
-@shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    max_retries=3,
+)
 def discover_repositories(self):
     processed = 0
+
     for query in DEFAULT_QUERIES:
-        for item in search_repositories(query, per_page=30):
+        for item in search_repositories(
+            query,
+            per_page=30,
+        ):
             with transaction.atomic():
                 upsert_repository(item)
+
             processed += 1
-    return {"processed": processed}
+
+    # Após a caça, o motor comercial entra automaticamente.
+    from opportunities.tasks import analyze_repositories
+
+    analysis_task = analyze_repositories.delay()
+
+    return {
+        "processed": processed,
+        "analysis_task": analysis_task.id,
+    }
 
 
-@shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    max_retries=3,
+)
 def refresh_repository_snapshots(self):
     refreshed = 0
     failed = 0
 
-    for repo in Repository.objects.filter(archived=False).iterator():
+    for repo in (
+        Repository.objects
+        .filter(archived=False)
+        .iterator()
+    ):
         try:
-            item = fetch_repository(repo.full_name)
+            item = fetch_repository(
+                repo.full_name
+            )
+
             with transaction.atomic():
                 upsert_repository(item)
+
             refreshed += 1
+
         except Exception:
             failed += 1
 
-    return {"refreshed": refreshed, "failed": failed}
+    from opportunities.tasks import analyze_repositories
+
+    analysis_task = analyze_repositories.delay()
+
+    return {
+        "refreshed": refreshed,
+        "failed": failed,
+        "analysis_task": analysis_task.id,
+    }

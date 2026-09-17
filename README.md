@@ -84,3 +84,19 @@ Credenciais locais iniciais:
 - Senha: `Hunter@2026!Carlos`
 
 Antes de publicar na VPS, troque a senha no `.env`.
+
+
+## Motor automático de oportunidades — 0.3
+
+O SaaS Hunter agora:
+
+- classifica repositórios por nicho;
+- identifica possíveis clientes;
+- sugere modelo comercial;
+- sugere faixa inicial de preço;
+- calcula score de 0 a 100;
+- considera licença, maturidade e crescimento;
+- cria oportunidades automaticamente;
+- executa nova análise após cada caça.
+
+O score é um filtro inicial e não substitui validação real de mercado.
