@@ -42,24 +42,36 @@ Análise da oportunidade
 <div class="dimension-grid">
 
     <div class="card dimension-card">
-        <span>Potencial comercial</span>
+
+        <span>
+            Potencial comercial
+        </span>
+
         <strong>
             {{ item.commercial_score }}/100
         </strong>
+
         <small>
             Mercado, monetização, recorrência,
-            concorrência, licença e facilidade de venda.
+            licença e facilidade comercial.
         </small>
+
     </div>
 
     <div class="card dimension-card">
-        <span>Força técnica / momento</span>
+
+        <span>
+            Força técnica / momento
+        </span>
+
         <strong>
             {{ item.technical_score }}/100
         </strong>
+
         <small>
-            Maturidade do projeto e crescimento observado.
+            Maturidade técnica e crescimento observado.
         </small>
+
     </div>
 
 </div>
@@ -68,33 +80,18 @@ Análise da oportunidade
 <div class="detail-grid">
 
     <div class="card detail-card">
-
         <h3>Problema</h3>
-
-        <p>
-            {{ item.problem }}
-        </p>
-
+        <p>{{ item.problem }}</p>
     </div>
 
     <div class="card detail-card">
-
         <h3>Solução sugerida</h3>
-
-        <p>
-            {{ item.solution }}
-        </p>
-
+        <p>{{ item.solution }}</p>
     </div>
 
     <div class="card detail-card">
-
         <h3>Cliente-alvo</h3>
-
-        <p>
-            {{ item.target_customer }}
-        </p>
-
+        <p>{{ item.target_customer }}</p>
     </div>
 
     <div class="card detail-card">
@@ -110,6 +107,241 @@ Análise da oportunidade
         </strong>
 
     </div>
+
+</div>
+
+
+<div class="section">
+
+    <div class="section-header">
+
+        <h2>
+            Inteligência de mercado open-source
+        </h2>
+
+        <form
+            method="post"
+            action="{% url 'dashboard:run_market_research' item.pk %}"
+        >
+
+            {% csrf_token %}
+
+            <button
+                type="submit"
+                class="button button-primary"
+            >
+                Pesquisar concorrentes
+            </button>
+
+        </form>
+
+    </div>
+
+
+    {% if market_analysis %}
+
+    <div class="market-grid">
+
+        <div class="card market-card">
+
+            <span>
+                Alternativas encontradas
+            </span>
+
+            <strong>
+                {{ market_analysis.open_source_competitors }}
+            </strong>
+
+        </div>
+
+
+        <div class="card market-card">
+
+            <span>
+                Concorrentes fortes
+            </span>
+
+            <strong>
+                {{ market_analysis.strong_open_source_competitors }}
+            </strong>
+
+        </div>
+
+
+        <div class="card market-card">
+
+            <span>
+                Saturação open-source
+            </span>
+
+            <strong>
+                {{ market_analysis.saturation_score }}/100
+            </strong>
+
+            <small>
+                {{ market_analysis.get_saturation_level_display }}
+            </small>
+
+        </div>
+
+    </div>
+
+
+    <div class="card detail-card market-summary">
+
+        <h3>
+            Leitura do Hunter
+        </h3>
+
+        <p>
+            {{ market_analysis.summary }}
+        </p>
+
+        {% if market_analysis.top_competitor_name %}
+
+        <p>
+
+            <strong>
+                Principal alternativa encontrada:
+            </strong>
+
+            <a
+                href="{{ market_analysis.top_competitor_url }}"
+                target="_blank"
+            >
+                {{ market_analysis.top_competitor_name }}
+            </a>
+
+            — ★ {{ market_analysis.top_competitor_stars }}
+
+        </p>
+
+        {% endif %}
+
+    </div>
+
+
+    {% if competitors %}
+
+    <div class="card table-card">
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Projeto</th>
+                        <th>Relevância</th>
+                        <th>Estrelas</th>
+                        <th>Forks</th>
+                        <th>Linguagem</th>
+                        <th>Licença</th>
+                        <th>Força</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                {% for competitor in competitors %}
+
+                <tr>
+
+                    <td>
+
+                        <a
+                            href="{{ competitor.url }}"
+                            target="_blank"
+                            class="repo-name"
+                        >
+                            {{ competitor.full_name }}
+                        </a>
+
+                        <div class="repo-description">
+                            {{ competitor.description|default:"Sem descrição" }}
+                        </div>
+
+                    </td>
+
+                    <td>
+                        {{ competitor.relevance_score }}/100
+                    </td>
+
+                    <td>
+                        ★ {{ competitor.stars }}
+                    </td>
+
+                    <td>
+                        {{ competitor.forks }}
+                    </td>
+
+                    <td>
+                        {{ competitor.language|default:"-" }}
+                    </td>
+
+                    <td>
+                        {{ competitor.license_spdx|default:"-" }}
+                    </td>
+
+                    <td>
+
+                        {% if competitor.is_strong %}
+
+                            <span class="badge badge-danger">
+                                Forte
+                            </span>
+
+                        {% else %}
+
+                            <span class="badge">
+                                Normal
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+
+    <div class="market-warning">
+
+        Este indicador mede apenas alternativas
+        open-source encontradas no GitHub.
+        Não representa sozinho o tamanho ou a
+        saturação do mercado comercial.
+
+    </div>
+
+
+    {% else %}
+
+    <div class="card detail-card">
+
+        <h3>
+            Mercado ainda não pesquisado
+        </h3>
+
+        <p>
+            Clique em <strong>Pesquisar concorrentes</strong>
+            para o Hunter procurar projetos semelhantes.
+        </p>
+
+    </div>
+
+    {% endif %}
 
 </div>
 
@@ -176,7 +408,9 @@ Análise da oportunidade
 
     <div class="card detail-card">
 
-        <h3>Análise comercial inicial</h3>
+        <h3>
+            Análise comercial inicial
+        </h3>
 
         <p>
             {{ item.commercial_summary }}
@@ -191,7 +425,9 @@ Análise da oportunidade
 
     <div class="card detail-card">
 
-        <h3>Por que recebeu esse score?</h3>
+        <h3>
+            Por que recebeu esse score?
+        </h3>
 
         <p>
             {{ item.score.rationale }}
@@ -211,10 +447,13 @@ Análise da oportunidade
         <p>
             ★ {{ item.repository.stars }}
             &nbsp;&nbsp;
+
             Forks: {{ item.repository.forks }}
             &nbsp;&nbsp;
+
             Issues: {{ item.repository.open_issues }}
             &nbsp;&nbsp;
+
             Licença:
             {{ item.repository.license_spdx|default:"Não identificada" }}
         </p>

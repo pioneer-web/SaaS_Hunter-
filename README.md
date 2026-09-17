@@ -109,3 +109,18 @@ O score é um filtro inicial e não substitui validação real de mercado.
 - licença influencia a facilidade comercial;
 - potencial comercial separado da força técnica;
 - novos testes contra falsos positivos.
+
+## Inteligência de mercado open-source — 0.4
+
+O SaaS Hunter agora:
+
+- pesquisa projetos semelhantes no GitHub;
+- registra alternativas open-source;
+- mede relevância;
+- identifica concorrentes fortes;
+- calcula saturação open-source;
+- identifica a principal alternativa;
+- permite pesquisa manual por oportunidade.
+
+A saturação open-source não representa,
+sozinha, a saturação do mercado comercial.

@@ -689,3 +689,62 @@ td {
         grid-template-columns: 1fr;
     }
 }
+
+/* MARKET INTELLIGENCE 0.4 */
+
+.market-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.market-card {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.market-card span {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.market-card strong {
+    font-size: 30px;
+}
+
+.market-card small {
+    color: #64748b;
+    font-weight: 700;
+}
+
+.market-summary {
+    margin-bottom: 18px;
+}
+
+.market-warning {
+    margin-top: 14px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #fff7ed;
+    color: #9a3412;
+    border: 1px solid #fed7aa;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.badge-danger {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+@media (max-width: 900px) {
+
+    .market-grid {
+        grid-template-columns: 1fr;
+    }
+
+}

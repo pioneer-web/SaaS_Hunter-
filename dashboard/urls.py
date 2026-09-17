@@ -5,6 +5,7 @@ from .views import (
     opportunities_page,
     opportunity_detail,
     repositories_page,
+    run_market_research,
     run_scan,
 )
 
@@ -13,6 +14,7 @@ app_name = "dashboard"
 
 
 urlpatterns = [
+
     path(
         "",
         home,
@@ -35,6 +37,12 @@ urlpatterns = [
         "oportunidades/<int:pk>/",
         opportunity_detail,
         name="opportunity_detail",
+    ),
+
+    path(
+        "oportunidades/<int:pk>/pesquisar-mercado/",
+        run_market_research,
+        name="run_market_research",
     ),
 
     path(

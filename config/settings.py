@@ -120,6 +120,13 @@ CELERY_BEAT_SCHEDULE = {
         "task": "scanner.tasks.refresh_repository_snapshots",
         "schedule": 60 * 60 * 24,
     },
+    "market-research-daily": {
+        "task": "opportunities.tasks.research_top_opportunities",
+        "schedule": 60 * 60 * 24,
+        "kwargs": {
+            "limit": 8,
+        },
+    },
 }
 
 

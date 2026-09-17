@@ -68,3 +68,331 @@ class OpportunityScore(models.Model):
 
     def __str__(self):
         return f"{self.opportunity} - {self.final_score}/100"
+
+# =========================================================
+# SaaS Hunter 0.4 - Market Intelligence
+# =========================================================
+
+class MarketAnalysis(models.Model):
+    class Saturation(models.TextChoices):
+        LOW = "low", "Baixa"
+        MEDIUM = "medium", "Média"
+        HIGH = "high", "Alta"
+        VERY_HIGH = "very_high", "Muito alta"
+
+    opportunity = models.OneToOneField(
+        Opportunity,
+        on_delete=models.CASCADE,
+        related_name="market_analysis",
+    )
+
+    query_used = models.CharField(
+        max_length=500,
+        blank=True,
+    )
+
+    open_source_competitors = models.PositiveIntegerField(
+        default=0
+    )
+
+    strong_open_source_competitors = models.PositiveIntegerField(
+        default=0
+    )
+
+    saturation_score = models.PositiveSmallIntegerField(
+        default=0
+    )
+
+    saturation_level = models.CharField(
+        max_length=20,
+        choices=Saturation.choices,
+        default=Saturation.LOW,
+    )
+
+    top_competitor_name = models.CharField(
+        max_length=520,
+        blank=True,
+    )
+
+    top_competitor_url = models.URLField(
+        max_length=1000,
+        blank=True,
+    )
+
+    top_competitor_stars = models.PositiveIntegerField(
+        default=0
+    )
+
+    summary = models.TextField(
+        blank=True
+    )
+
+    researched_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return (
+            f"{self.opportunity.repository.full_name} - "
+            f"{self.get_saturation_level_display()}"
+        )
+
+
+class Competitor(models.Model):
+    opportunity = models.ForeignKey(
+        Opportunity,
+        on_delete=models.CASCADE,
+        related_name="competitors",
+    )
+
+    github_id = models.BigIntegerField()
+
+    full_name = models.CharField(
+        max_length=520
+    )
+
+    url = models.URLField(
+        max_length=1000
+    )
+
+    description = models.TextField(
+        blank=True
+    )
+
+    language = models.CharField(
+        max_length=120,
+        blank=True,
+    )
+
+    stars = models.PositiveIntegerField(
+        default=0
+    )
+
+    forks = models.PositiveIntegerField(
+        default=0
+    )
+
+    open_issues = models.PositiveIntegerField(
+        default=0
+    )
+
+    license_spdx = models.CharField(
+        max_length=80,
+        blank=True,
+    )
+
+    relevance_score = models.PositiveSmallIntegerField(
+        default=0
+    )
+
+    is_strong = models.BooleanField(
+        default=False
+    )
+
+    pushed_at_github = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+        ordering = [
+            "-relevance_score",
+            "-stars",
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "opportunity",
+                    "github_id",
+                ],
+                name="unique_opportunity_competitor",
+            )
+        ]
+
+        indexes = [
+            models.Index(
+                fields=[
+                    "opportunity",
+                    "-relevance_score",
+                ]
+            ),
+            models.Index(
+                fields=["-stars"]
+            ),
+        ]
+
+    def __str__(self):
+        return self.full_name
+
+# =========================================================
+# SaaS Hunter 0.4 - Market Intelligence
+# =========================================================
+
+class MarketAnalysis(models.Model):
+    class Saturation(models.TextChoices):
+        LOW = "low", "Baixa"
+        MEDIUM = "medium", "Média"
+        HIGH = "high", "Alta"
+        VERY_HIGH = "very_high", "Muito alta"
+
+    opportunity = models.OneToOneField(
+        Opportunity,
+        on_delete=models.CASCADE,
+        related_name="market_analysis",
+    )
+
+    query_used = models.CharField(
+        max_length=500,
+        blank=True,
+    )
+
+    open_source_competitors = models.PositiveIntegerField(
+        default=0
+    )
+
+    strong_open_source_competitors = models.PositiveIntegerField(
+        default=0
+    )
+
+    saturation_score = models.PositiveSmallIntegerField(
+        default=0
+    )
+
+    saturation_level = models.CharField(
+        max_length=20,
+        choices=Saturation.choices,
+        default=Saturation.LOW,
+    )
+
+    top_competitor_name = models.CharField(
+        max_length=520,
+        blank=True,
+    )
+
+    top_competitor_url = models.URLField(
+        max_length=1000,
+        blank=True,
+    )
+
+    top_competitor_stars = models.PositiveIntegerField(
+        default=0
+    )
+
+    summary = models.TextField(
+        blank=True
+    )
+
+    researched_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return (
+            f"{self.opportunity.repository.full_name} - "
+            f"{self.get_saturation_level_display()}"
+        )
+
+
+class Competitor(models.Model):
+    opportunity = models.ForeignKey(
+        Opportunity,
+        on_delete=models.CASCADE,
+        related_name="competitors",
+    )
+
+    github_id = models.BigIntegerField()
+
+    full_name = models.CharField(
+        max_length=520
+    )
+
+    url = models.URLField(
+        max_length=1000
+    )
+
+    description = models.TextField(
+        blank=True
+    )
+
+    language = models.CharField(
+        max_length=120,
+        blank=True,
+    )
+
+    stars = models.PositiveIntegerField(
+        default=0
+    )
+
+    forks = models.PositiveIntegerField(
+        default=0
+    )
+
+    open_issues = models.PositiveIntegerField(
+        default=0
+    )
+
+    license_spdx = models.CharField(
+        max_length=80,
+        blank=True,
+    )
+
+    relevance_score = models.PositiveSmallIntegerField(
+        default=0
+    )
+
+    is_strong = models.BooleanField(
+        default=False
+    )
+
+    pushed_at_github = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+        ordering = [
+            "-relevance_score",
+            "-stars",
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "opportunity",
+                    "github_id",
+                ],
+                name="unique_opportunity_competitor",
+            )
+        ]
+
+        indexes = [
+            models.Index(
+                fields=[
+                    "opportunity",
+                    "-relevance_score",
+                ]
+            ),
+            models.Index(
+                fields=["-stars"]
+            ),
+        ]
+
+    def __str__(self):
+        return self.full_name

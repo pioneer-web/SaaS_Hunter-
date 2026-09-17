@@ -38,13 +38,18 @@ def github_get(path, params=None):
     return response.json()
 
 
-def search_repositories(query, per_page=30):
+def search_repositories(
+    query,
+    per_page=30,
+    sort="updated",
+    order="desc",
+):
     data = github_get(
         "/search/repositories",
         params={
             "q": query,
-            "sort": "updated",
-            "order": "desc",
+            "sort": sort,
+            "order": order,
             "per_page": per_page,
         },
     )

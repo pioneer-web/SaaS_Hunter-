@@ -11,8 +11,12 @@ from django.views.decorators.http import require_POST
 
 from opportunities.engine import score_dimensions
 from opportunities.models import (
+    MarketAnalysis,
     Opportunity,
     OpportunityScore,
+)
+from opportunities.tasks import (
+    research_opportunity_market_task,
 )
 from repositories.models import Repository
 from scanner.tasks import discover_repositories
@@ -80,9 +84,7 @@ def home(request):
             .order_by("-stars")[:8]
         ),
 
-        "recent_opportunities": (
-            recent_opportunities
-        ),
+        "recent_opportunities": recent_opportunities,
     }
 
     return render(
@@ -222,8 +224,19 @@ def opportunity_detail(request, pk):
         pk=pk,
     )
 
-    attach_dimensions(
-        opportunity
+    attach_dimensions(opportunity)
+
+    try:
+        market_analysis = (
+            opportunity.market_analysis
+        )
+
+    except MarketAnalysis.DoesNotExist:
+        market_analysis = None
+
+    competitors = (
+        opportunity.competitors
+        .all()[:15]
     )
 
     return render(
@@ -231,7 +244,39 @@ def opportunity_detail(request, pk):
         "dashboard/opportunity_detail.html",
         {
             "item": opportunity,
+            "market_analysis": market_analysis,
+            "competitors": competitors,
         },
+    )
+
+
+@login_required
+@require_POST
+def run_market_research(
+    request,
+    pk,
+):
+    opportunity = get_object_or_404(
+        Opportunity,
+        pk=pk,
+    )
+
+    task = (
+        research_opportunity_market_task
+        .delay(opportunity.pk)
+    )
+
+    messages.success(
+        request,
+        (
+            "Pesquisa de concorrentes iniciada. "
+            f"Tarefa: {task.id[:8]}…"
+        ),
+    )
+
+    return redirect(
+        "dashboard:opportunity_detail",
+        pk=opportunity.pk,
     )
 
 
@@ -245,8 +290,8 @@ def run_scan(request):
         (
             "Caça iniciada. "
             f"Tarefa: {task.id[:8]}… "
-            "Ao terminar, o motor de oportunidades "
-            "será executado automaticamente."
+            "O motor de oportunidades será "
+            "executado automaticamente."
         ),
     )
 
