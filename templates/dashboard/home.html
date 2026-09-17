@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SaaS Hunter</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background: #f6f7f9; color: #111827; }
+    main { max-width: 1100px; margin: 48px auto; padding: 0 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(210px,1fr)); gap: 16px; }
+    .card { background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:20px; }
+    .number { font-size:32px; font-weight:700; margin-top:8px; }
+    table { width:100%; border-collapse:collapse; margin-top:24px; background:#fff; border-radius:16px; overflow:hidden; }
+    th,td { padding:14px; border-bottom:1px solid #eee; text-align:left; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>SaaS Hunter</h1>
+  <p>Radar de oportunidades open-source com potencial comercial.</p>
+  <div class="grid">
+    <div class="card"><div>Repositórios</div><div class="number">{{ repositories_count }}</div></div>
+    <div class="card"><div>Oportunidades</div><div class="number">{{ opportunities_count }}</div></div>
+    <div class="card"><div>Score ≥ 80</div><div class="number">{{ strong_opportunities_count }}</div></div>
+  </div>
+
+  <h2>Oportunidades recentes</h2>
+  <table>
+    <thead><tr><th>Projeto</th><th>Nicho</th><th>Score</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for item in recent_opportunities %}
+      <tr>
+        <td>{{ item.repository.full_name }}</td>
+        <td>{{ item.market_segment|default:"-" }}</td>
+        <td>{% if item.score %}{{ item.score.final_score }}{% else %}-{% endif %}</td>
+        <td>{{ item.get_status_display }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4">Nenhuma oportunidade analisada ainda.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</main>
+</body>
+</html>

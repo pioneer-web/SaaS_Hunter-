@@ -1,0 +1,92 @@
+services:
+  web:
+    build: .
+    command: >
+      sh -c "python scripts/wait_for_services.py &&
+             python manage.py migrate --noinput &&
+             python manage.py ensure_admin &&
+             python manage.py collectstatic --noinput &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 60"
+    env_file:
+      - .env
+    ports:
+      - "8020:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hunter_net
+    restart: unless-stopped
+
+  worker:
+    build: .
+    command: >
+      sh -c "python scripts/wait_for_services.py &&
+             celery -A config worker -l INFO --concurrency=2"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hunter_net
+    restart: unless-stopped
+
+  beat:
+    build: .
+    command: >
+      sh -c "python scripts/wait_for_services.py &&
+             celery -A config beat -l INFO"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hunter_net
+    restart: unless-stopped
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - saas_hunter_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - hunter_net
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - saas_hunter_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - hunter_net
+    restart: unless-stopped
+
+volumes:
+  saas_hunter_postgres:
+  saas_hunter_redis:
+
+networks:
+  hunter_net:
+    driver: bridge
