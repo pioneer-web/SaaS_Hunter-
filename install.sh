@@ -2,8 +2,8 @@
 set -e
 
 echo "=== SaaS Hunter ==="
-echo "Recriando somente os containers/volumes deste projeto..."
-docker compose down -v --remove-orphans || true
+echo "Atualizando aplicação..."
+
 docker compose up -d --build
 
 echo
@@ -11,8 +11,8 @@ echo "Status:"
 docker compose ps
 
 echo
-echo "Pronto."
+echo "SaaS Hunter iniciado."
 echo "Painel: http://localhost:8020/"
 echo "Admin:  http://localhost:8020/admin/"
-echo "Usuario: carlos"
-echo "Senha:   Hunter@2026!Carlos"
+echo
+echo "As credenciais são definidas exclusivamente no arquivo .env."

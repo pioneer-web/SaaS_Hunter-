@@ -1,45 +1,247 @@
-<!doctype html>
-<html lang="pt-br">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>SaaS Hunter</title>
-  <style>
-    body { font-family: system-ui, sans-serif; margin: 0; background: #f6f7f9; color: #111827; }
-    main { max-width: 1100px; margin: 48px auto; padding: 0 20px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(210px,1fr)); gap: 16px; }
-    .card { background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:20px; }
-    .number { font-size:32px; font-weight:700; margin-top:8px; }
-    table { width:100%; border-collapse:collapse; margin-top:24px; background:#fff; border-radius:16px; overflow:hidden; }
-    th,td { padding:14px; border-bottom:1px solid #eee; text-align:left; }
-  </style>
-</head>
-<body>
-<main>
-  <h1>SaaS Hunter</h1>
-  <p>Radar de oportunidades open-source com potencial comercial.</p>
-  <div class="grid">
-    <div class="card"><div>Repositórios</div><div class="number">{{ repositories_count }}</div></div>
-    <div class="card"><div>Oportunidades</div><div class="number">{{ opportunities_count }}</div></div>
-    <div class="card"><div>Score ≥ 80</div><div class="number">{{ strong_opportunities_count }}</div></div>
-  </div>
+{% extends "base.html" %}
 
-  <h2>Oportunidades recentes</h2>
-  <table>
-    <thead><tr><th>Projeto</th><th>Nicho</th><th>Score</th><th>Status</th></tr></thead>
-    <tbody>
-      {% for item in recent_opportunities %}
-      <tr>
-        <td>{{ item.repository.full_name }}</td>
-        <td>{{ item.market_segment|default:"-" }}</td>
-        <td>{% if item.score %}{{ item.score.final_score }}{% else %}-{% endif %}</td>
-        <td>{{ item.get_status_display }}</td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="4">Nenhuma oportunidade analisada ainda.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</main>
-</body>
-</html>
+{% block title %}
+Dashboard | SaaS Hunter
+{% endblock %}
+
+{% block page_title %}
+Dashboard
+{% endblock %}
+
+{% block content %}
+
+<div class="heading-row">
+
+    <div>
+        <h1>Radar de oportunidades</h1>
+
+        <div class="subtitle">
+            Projetos open-source monitorados pelo SaaS Hunter.
+        </div>
+    </div>
+
+    <form
+        method="post"
+        action="{% url 'dashboard:run_scan' %}"
+    >
+        {% csrf_token %}
+
+        <button
+            type="submit"
+            class="button button-primary"
+        >
+            Executar caça agora
+        </button>
+    </form>
+
+</div>
+
+
+<div class="cards">
+
+    <div class="card metric">
+        <div class="metric-label">
+            Repositórios
+        </div>
+
+        <div class="metric-value">
+            {{ repositories_count }}
+        </div>
+    </div>
+
+    <div class="card metric">
+        <div class="metric-label">
+            Oportunidades
+        </div>
+
+        <div class="metric-value">
+            {{ opportunities_count }}
+        </div>
+    </div>
+
+    <div class="card metric">
+        <div class="metric-label">
+            Score ≥ 80
+        </div>
+
+        <div class="metric-value">
+            {{ strong_opportunities_count }}
+        </div>
+    </div>
+
+</div>
+
+
+<div class="section">
+
+    <div class="section-header">
+
+        <h2>
+            Repositórios em destaque
+        </h2>
+
+        <a
+            href="{% url 'dashboard:repositories' %}"
+            class="section-link"
+        >
+            Ver todos
+        </a>
+
+    </div>
+
+    <div class="card table-card">
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Projeto</th>
+                        <th>Linguagem</th>
+                        <th>Estrelas</th>
+                        <th>Forks</th>
+                        <th>Licença</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                {% for repo in top_repositories %}
+
+                    <tr>
+
+                        <td>
+                            <div class="repo-name">
+                                {{ repo.full_name }}
+                            </div>
+
+                            <div class="repo-description">
+                                {{ repo.description|default:"Sem descrição" }}
+                            </div>
+                        </td>
+
+                        <td>
+                            {{ repo.language|default:"-" }}
+                        </td>
+
+                        <td>
+                            ★ {{ repo.stars }}
+                        </td>
+
+                        <td>
+                            {{ repo.forks }}
+                        </td>
+
+                        <td>
+                            {{ repo.license_spdx|default:"-" }}
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+                        <td colspan="5">
+                            Nenhum repositório encontrado.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="section">
+
+    <div class="section-header">
+
+        <h2>
+            Oportunidades recentes
+        </h2>
+
+        <a
+            href="{% url 'dashboard:opportunities' %}"
+            class="section-link"
+        >
+            Ver todas
+        </a>
+
+    </div>
+
+    <div class="card table-card">
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Projeto</th>
+                        <th>Nicho</th>
+                        <th>Score</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                {% for item in recent_opportunities %}
+
+                    <tr>
+
+                        <td class="repo-name">
+                            {{ item.repository.full_name }}
+                        </td>
+
+                        <td>
+                            {{ item.market_segment|default:"-" }}
+                        </td>
+
+                        <td>
+                            {% if item.score %}
+                                <span class="score">
+                                    {{ item.score.final_score }}
+                                </span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <span class="badge">
+                                {{ item.get_status_display }}
+                            </span>
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+                        <td colspan="4">
+                            Nenhuma oportunidade analisada ainda.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

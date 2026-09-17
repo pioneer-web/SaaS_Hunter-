@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}
+Entrar | SaaS Hunter
+{% endblock %}
+
+{% block anonymous_content %}
+
+<div class="login-page">
+
+    <section class="login-hero">
+
+        <div class="login-brand">
+            SaaS Hunter
+        </div>
+
+        <h1>
+            Transforme projetos open-source em oportunidades de negócio.
+        </h1>
+
+        <p>
+            Um radar inteligente para descobrir projetos,
+            acompanhar crescimento e identificar ideias
+            com potencial real para virar SaaS.
+        </p>
+
+    </section>
+
+    <section class="login-side">
+
+        <div class="login-card">
+
+            <h2>Bem-vindo</h2>
+
+            <p>
+                Entre para acessar seu radar de oportunidades.
+            </p>
+
+            {% if form.errors %}
+            <div class="login-error">
+                Usuário ou senha inválidos.
+            </div>
+            {% endif %}
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                <div class="form-group">
+
+                    <label for="id_username">
+                        Usuário
+                    </label>
+
+                    <input
+                        class="form-control"
+                        type="text"
+                        name="username"
+                        id="id_username"
+                        autocomplete="username"
+                        required
+                        autofocus
+                    >
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="id_password">
+                        Senha
+                    </label>
+
+                    <input
+                        class="form-control"
+                        type="password"
+                        name="password"
+                        id="id_password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                </div>
+
+                <button
+                    type="submit"
+                    class="login-button"
+                >
+                    Entrar
+                </button>
+
+            </form>
+
+        </div>
+
+    </section>
+
+</div>
+
+{% endblock %}

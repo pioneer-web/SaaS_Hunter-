@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}
+Oportunidades | SaaS Hunter
+{% endblock %}
+
+{% block page_title %}
+Oportunidades
+{% endblock %}
+
+{% block content %}
+
+<div class="heading-row">
+
+    <div>
+
+        <h1>Oportunidades</h1>
+
+        <div class="subtitle">
+            Projetos classificados para análise comercial.
+        </div>
+
+    </div>
+
+</div>
+
+
+<form method="get" class="filters">
+
+    <input
+        class="form-control search"
+        type="search"
+        name="q"
+        value="{{ q }}"
+        placeholder="Buscar projeto ou nicho..."
+    >
+
+    <select
+        class="form-control"
+        name="status"
+    >
+
+        <option value="">
+            Todos os status
+        </option>
+
+        {% for value, label in statuses %}
+
+        <option
+            value="{{ value }}"
+            {% if status == value %}selected{% endif %}
+        >
+            {{ label }}
+        </option>
+
+        {% endfor %}
+
+    </select>
+
+    <button
+        class="button button-primary"
+        type="submit"
+    >
+        Filtrar
+    </button>
+
+</form>
+
+
+<div class="card table-card">
+
+    <div class="table-wrap">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Projeto</th>
+                    <th>Nicho</th>
+                    <th>Cliente</th>
+                    <th>Score</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            {% for item in page_obj %}
+
+                <tr>
+
+                    <td class="repo-name">
+                        {{ item.repository.full_name }}
+                    </td>
+
+                    <td>
+                        {{ item.market_segment|default:"-" }}
+                    </td>
+
+                    <td>
+                        {{ item.target_customer|default:"-"|truncatechars:60 }}
+                    </td>
+
+                    <td>
+
+                        {% if item.score %}
+
+                        <span class="score">
+                            {{ item.score.final_score }}
+                        </span>
+
+                        {% else %}
+
+                        -
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+
+                        <span class="badge">
+                            {{ item.get_status_display }}
+                        </span>
+
+                    </td>
+
+                </tr>
+
+            {% empty %}
+
+                <tr>
+
+                    <td colspan="5">
+                        Ainda não existem oportunidades analisadas.
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <div class="pagination">
+
+        <span>
+            Página {{ page_obj.number }}
+            de {{ page_obj.paginator.num_pages }}
+        </span>
+
+        <div>
+
+            {% if page_obj.has_previous %}
+
+            <a href="?page={{ page_obj.previous_page_number }}&q={{ q }}&status={{ status }}">
+                ← Anterior
+            </a>
+
+            {% endif %}
+
+            {% if page_obj.has_next %}
+
+            &nbsp;&nbsp;
+
+            <a href="?page={{ page_obj.next_page_number }}&q={{ q }}&status={{ status }}">
+                Próxima →
+            </a>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
