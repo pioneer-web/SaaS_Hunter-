@@ -9,9 +9,35 @@ from django.shortcuts import (
 )
 from django.views.decorators.http import require_POST
 
-from opportunities.models import Opportunity
+from opportunities.engine import score_dimensions
+from opportunities.models import (
+    Opportunity,
+    OpportunityScore,
+)
 from repositories.models import Repository
 from scanner.tasks import discover_repositories
+
+
+def attach_dimensions(item):
+    try:
+        score = item.score
+
+    except OpportunityScore.DoesNotExist:
+        item.commercial_score = None
+        item.technical_score = None
+        return item
+
+    dimensions = score_dimensions(score)
+
+    item.commercial_score = dimensions[
+        "commercial_score"
+    ]
+
+    item.technical_score = dimensions[
+        "technical_score"
+    ]
+
+    return item
 
 
 @login_required
@@ -25,6 +51,16 @@ def home(request):
             "score",
         )
     )
+
+    recent_opportunities = list(
+        opportunities.order_by(
+            "-score__final_score",
+            "-created_at",
+        )[:8]
+    )
+
+    for item in recent_opportunities:
+        attach_dimensions(item)
 
     context = {
         "repositories_count": repositories.count(),
@@ -45,11 +81,7 @@ def home(request):
         ),
 
         "recent_opportunities": (
-            opportunities
-            .order_by(
-                "-score__final_score",
-                "-created_at",
-            )[:8]
+            recent_opportunities
         ),
     }
 
@@ -165,6 +197,9 @@ def opportunities_page(request):
         request.GET.get("page")
     )
 
+    for item in page_obj.object_list:
+        attach_dimensions(item)
+
     return render(
         request,
         "dashboard/opportunities.html",
@@ -185,6 +220,10 @@ def opportunity_detail(request, pk):
             "score",
         ),
         pk=pk,
+    )
+
+    attach_dimensions(
+        opportunity
     )
 
     return render(

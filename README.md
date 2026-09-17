@@ -84,7 +84,7 @@ As credenciais ficam exclusivamente no arquivo `.env`
 e nunca devem ser publicadas no GitHub.
 
 
-## Motor automático de oportunidades — 0.3
+## Motor automático de oportunidades — 0.3.1
 
 O SaaS Hunter agora:
 
@@ -98,3 +98,14 @@ O SaaS Hunter agora:
 - executa nova análise após cada caça.
 
 O score é um filtro inicial e não substitui validação real de mercado.
+
+
+## Calibração 0.3.1
+
+- peso maior para nome e descrição do projeto;
+- tópicos do GitHub têm peso limitado;
+- IA passa a ser tratada como tecnologia secundária quando existe um nicho claro;
+- classificação principal e categorias secundárias;
+- licença influencia a facilidade comercial;
+- potencial comercial separado da força técnica;
+- novos testes contra falsos positivos.

@@ -399,42 +399,264 @@ STRONG_COPYLEFT_LICENSES = {
 }
 
 
-def repository_text(repository):
+
+PRIMARY_SIGNALS = {
+    "agro": (
+        "farm management",
+        "agriculture management",
+        "livestock management",
+        "farm software",
+        "farming software",
+    ),
+    "health": (
+        "clinic management",
+        "hospital management",
+        "medical management",
+        "patient management",
+        "healthcare platform",
+        "dental management",
+    ),
+    "fitness": (
+        "gym management",
+        "fitness management",
+        "personal trainer",
+        "workout platform",
+    ),
+    "property": (
+        "property management",
+        "real estate management",
+        "rental management",
+        "tenant management",
+    ),
+    "booking": (
+        "booking system",
+        "appointment system",
+        "reservation system",
+        "scheduling platform",
+    ),
+    "crm": (
+        "crm",
+        "sales crm",
+        "sales os",
+        "sales platform",
+        "customer relationship",
+    ),
+    "erp": (
+        "erp",
+        "business management",
+        "enterprise resource",
+        "business management platform",
+    ),
+    "ecommerce": (
+        "ecommerce platform",
+        "e-commerce platform",
+        "online store",
+        "marketplace platform",
+        "retail management",
+    ),
+    "finance": (
+        "finance platform",
+        "financial platform",
+        "fintech",
+        "accounting platform",
+        "billing platform",
+    ),
+    "education": (
+        "learning management",
+        "education platform",
+        "school management",
+        "lms",
+    ),
+    "documents": (
+        "document management",
+        "workflow platform",
+        "form builder",
+        "document workflow",
+    ),
+    "ai": (
+        "ai agent",
+        "ai agents",
+        "llm platform",
+        "rag platform",
+        "ai assistant",
+        "artificial intelligence platform",
+    ),
+}
+
+
+BUSINESS_CATEGORY_SLUGS = {
+    "agro",
+    "health",
+    "fitness",
+    "property",
+    "booking",
+    "crm",
+    "erp",
+    "ecommerce",
+    "finance",
+    "education",
+    "documents",
+}
+
+
+def _normalize(value):
+    value = (value or "").lower()
+
+    for char in ("-", "_", "/", ".", ",", "(", ")", "[", "]"):
+        value = value.replace(char, " ")
+
+    return " ".join(value.split())
+
+
+def repository_sources(repository):
     topics = repository.topics or []
 
     if not isinstance(topics, list):
         topics = []
 
+    return {
+        "name": _normalize(
+            f"{repository.name or ''} {repository.full_name or ''}"
+        ),
+        "description": _normalize(
+            repository.description or ""
+        ),
+        "topics": [
+            _normalize(str(topic))
+            for topic in topics
+        ],
+    }
+
+
+def repository_text(repository):
+    sources = repository_sources(repository)
+
     return " ".join(
         [
-            repository.full_name or "",
-            repository.name or "",
-            repository.description or "",
-            " ".join(str(topic) for topic in topics),
+            sources["name"],
+            sources["description"],
+            " ".join(sources["topics"]),
         ]
-    ).lower()
+    )
+
+
+def _rule_match_score(rule, sources):
+    score = 0
+    matched = set()
+
+    name = sources["name"]
+    description = sources["description"]
+    topics = sources["topics"]
+
+    topic_points = 0
+
+    for raw_keyword in rule["keywords"]:
+        keyword = _normalize(raw_keyword)
+
+        if not keyword:
+            continue
+
+        found = False
+
+        if keyword in name:
+            score += 7
+            found = True
+
+        if keyword in description:
+            score += 5
+            found = True
+
+        if any(keyword in topic for topic in topics):
+            topic_points += 2
+            found = True
+
+        if found:
+            matched.add(raw_keyword)
+
+    # Evita categorias com dezenas de tópicos dominarem
+    # apenas pela quantidade de tags.
+    score += min(topic_points, 8)
+
+    for raw_signal in PRIMARY_SIGNALS.get(
+        rule["slug"],
+        (),
+    ):
+        signal = _normalize(raw_signal)
+
+        if signal in name:
+            score += 12
+
+        elif signal in description:
+            score += 10
+
+        elif any(signal in topic for topic in topics):
+            score += 4
+
+    return score, sorted(matched)
+
+
+def category_rankings(repository):
+    sources = repository_sources(repository)
+
+    rankings = []
+
+    for rule in CATEGORY_RULES:
+        score, matched = _rule_match_score(
+            rule,
+            sources,
+        )
+
+        rankings.append(
+            {
+                "rule": rule,
+                "score": score,
+                "matched_keywords": matched,
+            }
+        )
+
+    rankings.sort(
+        key=lambda item: (
+            item["score"],
+            len(item["matched_keywords"]),
+        ),
+        reverse=True,
+    )
+
+    return rankings
 
 
 def choose_category(repository):
-    text = repository_text(repository)
+    rankings = category_rankings(repository)
 
-    best_rule = GENERIC_RULE
-    best_hits = 0
-    matched_keywords = []
+    if not rankings:
+        return GENERIC_RULE, []
 
-    for rule in CATEGORY_RULES:
-        hits = [
-            keyword
-            for keyword in rule["keywords"]
-            if keyword.lower() in text
+    winner = rankings[0]
+
+    # IA deve ser tratada como tecnologia secundária quando
+    # existe um negócio vertical claramente identificado.
+    if winner["rule"]["slug"] == "ai":
+        business_candidates = [
+            item
+            for item in rankings
+            if (
+                item["rule"]["slug"]
+                in BUSINESS_CATEGORY_SLUGS
+                and item["score"] >= 12
+            )
         ]
 
-        if len(hits) > best_hits:
-            best_rule = rule
-            best_hits = len(hits)
-            matched_keywords = hits
+        if business_candidates:
+            winner = business_candidates[0]
 
-    return best_rule, matched_keywords
+    if winner["score"] < 5:
+        return GENERIC_RULE, []
+
+    return (
+        winner["rule"],
+        winner["matched_keywords"],
+    )
+
 
 
 def calculate_license_score(spdx):
@@ -453,6 +675,42 @@ def calculate_license_score(spdx):
         return 1
 
     return 0
+
+
+def license_assessment(spdx):
+    value = (spdx or "").strip().upper()
+
+    if value in PERMISSIVE_LICENSES:
+        return (
+            "Licença permissiva. "
+            "Ainda é necessário cumprir avisos e condições da licença."
+        )
+
+    if value in MEDIUM_LICENSES:
+        return (
+            "Licença com obrigações específicas. "
+            "Revisar requisitos antes de comercializar modificações."
+        )
+
+    if value in COPYLEFT_LICENSES:
+        return (
+            "Licença copyleft. "
+            "Revisar cuidadosamente as obrigações de distribuição "
+            "e disponibilização de código."
+        )
+
+    if value in STRONG_COPYLEFT_LICENSES:
+        return (
+            "Licença AGPL/copy-left forte. "
+            "Uma oferta hospedada pode gerar obrigações de disponibilização "
+            "do código modificado. Revisão jurídica recomendada."
+        )
+
+    return (
+        "Licença não identificada ou não reconhecida. "
+        "Não assumir direito de uso comercial antes de verificar "
+        "a licença do projeto."
+    )
 
 
 def calculate_growth_score(repository):
@@ -531,18 +789,84 @@ def calculate_technical_maturity(repository):
     return min(score, 10)
 
 
+
+def score_dimensions_from_values(scores):
+    commercial_points = (
+        scores["market_problem"]
+        + scores["monetization"]
+        + scores["recurrence"]
+        + scores["competition"]
+        + scores["commercial_ease"]
+        + scores["license"]
+        + scores["differentiation"]
+    )
+
+    technical_points = (
+        scores["growth"]
+        + scores["technical_maturity"]
+    )
+
+    commercial_score = round(
+        (commercial_points / 80) * 100
+    )
+
+    technical_score = round(
+        (technical_points / 20) * 100
+    )
+
+    return {
+        "commercial_score": min(
+            100,
+            commercial_score,
+        ),
+        "technical_score": min(
+            100,
+            technical_score,
+        ),
+    }
+
+
+def score_dimensions(score):
+    return score_dimensions_from_values(
+        {
+            "market_problem": score.market_problem,
+            "monetization": score.monetization,
+            "recurrence": score.recurrence,
+            "growth": score.growth,
+            "technical_maturity": score.technical_maturity,
+            "competition": score.competition,
+            "commercial_ease": score.commercial_ease,
+            "license": score.license,
+            "differentiation": score.differentiation,
+        }
+    )
+
+
 def evaluate_repository(repository):
-    rule, matched_keywords = choose_category(repository)
-    text = repository_text(repository)
+    rule, matched_keywords = choose_category(
+        repository
+    )
+
+    rankings = category_rankings(
+        repository
+    )
+
+    text = repository_text(
+        repository
+    )
 
     market_problem = rule["market_problem"]
 
     if len(matched_keywords) >= 3:
         market_problem += 2
+
     elif len(matched_keywords) >= 2:
         market_problem += 1
 
-    market_problem = min(market_problem, 20)
+    market_problem = min(
+        market_problem,
+        20,
+    )
 
     monetization = rule["monetization"]
 
@@ -551,29 +875,68 @@ def evaluate_repository(repository):
         "billing",
         "payment",
         "multi tenant",
-        "multi-tenant",
         "saas",
+        "pricing",
     )
 
-    if any(signal in text for signal in paid_signals):
-        monetization = min(20, monetization + 1)
+    if any(
+        signal in text
+        for signal in paid_signals
+    ):
+        monetization = min(
+            20,
+            monetization + 1,
+        )
 
-    recurrence = min(rule["recurrence"], 15)
+    recurrence = min(
+        rule["recurrence"],
+        15,
+    )
 
-    growth, growth_pct = calculate_growth_score(repository)
+    growth, growth_pct = (
+        calculate_growth_score(
+            repository
+        )
+    )
 
-    technical_maturity = calculate_technical_maturity(repository)
+    technical_maturity = (
+        calculate_technical_maturity(
+            repository
+        )
+    )
 
     license_score = calculate_license_score(
         repository.license_spdx
     )
+
+    commercial_ease = min(
+        rule["commercial_ease"],
+        5,
+    )
+
+    # Licença desconhecida ou muito restritiva aumenta
+    # a dificuldade comercial.
+    if license_score == 0:
+        commercial_ease = max(
+            0,
+            commercial_ease - 2,
+        )
+
+    elif license_score == 1:
+        commercial_ease = max(
+            0,
+            commercial_ease - 1,
+        )
 
     differentiation = rule["differentiation"]
 
     if len(matched_keywords) >= 3:
         differentiation += 1
 
-    differentiation = min(differentiation, 5)
+    differentiation = min(
+        differentiation,
+        5,
+    )
 
     scores = {
         "market_problem": market_problem,
@@ -581,44 +944,106 @@ def evaluate_repository(repository):
         "recurrence": recurrence,
         "growth": growth,
         "technical_maturity": technical_maturity,
-        "competition": min(rule["competition"], 10),
-        "commercial_ease": min(rule["commercial_ease"], 5),
+        "competition": min(
+            rule["competition"],
+            10,
+        ),
+        "commercial_ease": commercial_ease,
         "license": license_score,
         "differentiation": differentiation,
     }
 
-    final_score = min(100, sum(scores.values()))
+    final_score = min(
+        100,
+        sum(scores.values()),
+    )
 
-    matched = ", ".join(matched_keywords[:8]) or "nenhuma palavra-chave forte"
+    dimensions = score_dimensions_from_values(
+        scores
+    )
+
+    primary_slug = rule["slug"]
+
+    secondary = []
+
+    for item in rankings:
+        secondary_rule = item["rule"]
+
+        if secondary_rule["slug"] == primary_slug:
+            continue
+
+        if item["score"] < 5:
+            continue
+
+        secondary.append(
+            secondary_rule["name"]
+        )
+
+        if len(secondary) == 2:
+            break
+
+    matched = (
+        ", ".join(matched_keywords[:8])
+        or "nenhuma palavra-chave forte"
+    )
+
+    secondary_text = (
+        ", ".join(secondary)
+        if secondary
+        else "nenhuma categoria secundária relevante"
+    )
+
+    license_text = license_assessment(
+        repository.license_spdx
+    )
 
     rationale = (
-        "Análise automática SaaS Hunter 0.3. "
-        f"Nicho detectado: {rule['name']}. "
+        "Análise automática SaaS Hunter 0.3.1. "
+        f"Nicho principal: {rule['name']}. "
+        f"Categorias secundárias: {secondary_text}. "
         f"Sinais encontrados: {matched}. "
         f"Estrelas: {repository.stars}. "
         f"Forks: {repository.forks}. "
         f"Licença: {repository.license_spdx or 'não identificada'}. "
+        f"{license_text} "
         f"Crescimento observado: {growth_pct}%. "
-        "Este score é um filtro inicial e não substitui validação de mercado."
+        f"Potencial comercial normalizado: "
+        f"{dimensions['commercial_score']}/100. "
+        f"Força técnica/momento: "
+        f"{dimensions['technical_score']}/100. "
+        "O score é um filtro inicial e exige validação real "
+        "de mercado antes de qualquer investimento."
     )
 
     commercial_summary = (
         f"O projeto {repository.full_name} apresenta sinais de aplicação "
         f"no mercado de {rule['name']}. "
         f"O modelo inicial sugerido é {rule['business_model']}. "
-        "Antes de desenvolver, concorrência, demanda e disposição a pagar "
-        "devem ser validadas."
+        "Tecnologias ou categorias secundárias não substituem "
+        "a classificação do problema de negócio principal. "
+        "Antes de desenvolver, concorrência, demanda, licença "
+        "e disposição a pagar devem ser validadas."
     )
 
     return {
         "rule": rule,
         "matched_keywords": matched_keywords,
+        "secondary_categories": secondary,
         "scores": scores,
         "final_score": final_score,
+        "commercial_score": dimensions[
+            "commercial_score"
+        ],
+        "technical_score": dimensions[
+            "technical_score"
+        ],
         "growth_pct": growth_pct,
         "rationale": rationale,
         "commercial_summary": commercial_summary,
-        "eligible": final_score >= MIN_OPPORTUNITY_SCORE,
+        "eligible": (
+            final_score
+            >= MIN_OPPORTUNITY_SCORE
+        ),
     }
 
 

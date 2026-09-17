@@ -32,15 +32,34 @@ Análise da oportunidade
     </div>
 
     <div class="big-score">
-
-        {% if item.score %}
-            {{ item.score.final_score }}
-        {% else %}
-            -
-        {% endif %}
-
+        {{ item.score.final_score }}
         <span>/100</span>
+    </div>
 
+</div>
+
+
+<div class="dimension-grid">
+
+    <div class="card dimension-card">
+        <span>Potencial comercial</span>
+        <strong>
+            {{ item.commercial_score }}/100
+        </strong>
+        <small>
+            Mercado, monetização, recorrência,
+            concorrência, licença e facilidade de venda.
+        </small>
+    </div>
+
+    <div class="card dimension-card">
+        <span>Força técnica / momento</span>
+        <strong>
+            {{ item.technical_score }}/100
+        </strong>
+        <small>
+            Maturidade do projeto e crescimento observado.
+        </small>
     </div>
 
 </div>
@@ -58,7 +77,6 @@ Análise da oportunidade
 
     </div>
 
-
     <div class="card detail-card">
 
         <h3>Solução sugerida</h3>
@@ -69,7 +87,6 @@ Análise da oportunidade
 
     </div>
 
-
     <div class="card detail-card">
 
         <h3>Cliente-alvo</h3>
@@ -79,7 +96,6 @@ Análise da oportunidade
         </p>
 
     </div>
-
 
     <div class="card detail-card">
 
@@ -97,8 +113,6 @@ Análise da oportunidade
 
 </div>
 
-
-{% if item.score %}
 
 <div class="section">
 
@@ -157,8 +171,6 @@ Análise da oportunidade
 
 </div>
 
-{% endif %}
-
 
 <div class="section">
 
@@ -175,8 +187,6 @@ Análise da oportunidade
 </div>
 
 
-{% if item.score %}
-
 <div class="section">
 
     <div class="card detail-card">
@@ -190,8 +200,6 @@ Análise da oportunidade
     </div>
 
 </div>
-
-{% endif %}
 
 
 <div class="section">
@@ -207,7 +215,8 @@ Análise da oportunidade
             &nbsp;&nbsp;
             Issues: {{ item.repository.open_issues }}
             &nbsp;&nbsp;
-            Licença: {{ item.repository.license_spdx|default:"Não identificada" }}
+            Licença:
+            {{ item.repository.license_spdx|default:"Não identificada" }}
         </p>
 
         <a
