@@ -78,12 +78,10 @@ chmod +x install.sh
 ./install.sh
 ```
 
-Credenciais locais iniciais:
+Credenciais administrativas:
 
-- Usuário: `carlos`
-- Senha: `Hunter@2026!Carlos`
-
-Antes de publicar na VPS, troque a senha no `.env`.
+As credenciais ficam exclusivamente no arquivo `.env`
+e nunca devem ser publicadas no GitHub.
 
 
 ## Motor automático de oportunidades — 0.3
